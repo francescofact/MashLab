@@ -1,7 +1,7 @@
 clear all
 close all
 %global needing
-global isListening loadingLabel micrgroup startpanel songs_dir albumpanel titleLabel matchLabel image1 image2
+global isListening loadingLabel micrgroup startpanel songs_dir albumpanel titleLabel matchLabel image1 image2 mediaButton slider
 isListening = 0;
 songs_dir = './lib_mezzi';
 threshold = 125;
@@ -41,6 +41,8 @@ uilabel(albumpanel, 'Text', 'Match a:', 'Position', [230 130 51 22]);
 titleLabel = uilabel(albumpanel, 'Text', 'Sconosciuto', 'Position', [282 151 316 22]);
 matchLabel = uilabel(albumpanel, 'Text', 'Sconosciuto', 'Position', [282 130 316 22]);
 image2 = uiimage(albumpanel, 'Position', [19 14 178 177], 'ImageClickedFcn', @shazamPushed);
+mediaButton = uibutton(albumpanel, 'push', 'Text', '►', 'Position', [226 69 28 26], 'ButtonPushedFcn', @mediaPlayerButton);
+slider = uislider(albumpanel, 'Enable', 'off', 'FontColor', [0.9412 0.9412 0.9412], 'Position', [270 82 316 3]);
 
 % -------------------------  carico libreria  ----------------------------
 loadLibrary();
@@ -60,6 +62,26 @@ function shazamPushed(hObject, eventdata)
         isListening = 0;
         
     end
+end
+
+% handler play pausa
+function mediaPlayerButton(hObject, eventdata)
+    global player slider
+    
+    if hObject.Text == "■"
+        pause(player);
+        slider.Value = 0;
+        hObject.Text = "►";
+    else 
+        play(player);
+        hObject.Text = "■";
+    end
+end
+
+% handler mediaplayer secondi
+function mediaPlayerTick(hObject, eventdata)
+    global slider
+    slider.Value = slider.Value+0.5;
 end
 
 % mostro nella gui il match
@@ -94,7 +116,7 @@ end
 
 % ascolta e calcola il match
 function doWork()
-    global matchOptions fs n_songs songList image1
+    global matchOptions fs n_songs songList songs_dir image1 player slider
     %get ready for recording
     recorder = audiorecorder(48000,16,1,2); %TODO: prendere dalla gui il mic
     %record 
@@ -115,14 +137,17 @@ function doWork()
     [songID,indx,maxValues] = shazy(matchOptions, n_songs, recorder);
     t=toc;
     fprintf("Done.\n")
-
-    %play the result (oh yes oh yes)
-    result=audioplayer(matchOptions{songID}(indx:indx+20*fs{songID}), fs{songID});
-    play(result);
-
+    correctsong = songList(songID).name;
+    
+    %initialize mediaplayer
+    player=audioplayer(matchOptions{songID}, fs{songID});
+    set(player,'TimerFcn',@mediaPlayerTick, 'TimerPeriod', 0.5);
+    sLenght = audioinfo(songs_dir + "/" +correctsong).Duration;
+    slider.Limits = [0,ceil(sLenght)];
+    
     %here we are, print the results
     if songID >= 1
-      fprintf("\nI think this is: %s a %d secondi.\n", extractBefore(songList(songID).name, '.mp3'), int16(indx/fs{songID}));
+      fprintf("\nI think this is: %s a %d secondi.\n", extractBefore(correctsong, ".mp3"), int16(indx/fs{songID}));
       setSong(extractBefore(songList(songID).name, '.mp3'), int16(indx/fs{songID}));
     else 
       fprintf("\nNo matches\n");
