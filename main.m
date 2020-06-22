@@ -6,21 +6,20 @@ threshold = 125;
 % read songs list
 cd(songs_dir);
 songList = dir('*.mp3');
-nSongs = size(songList, 1);
+n_songs = size(songList, 1);
 
 %load songs
-fprintf("Loading library")
-for i = 1: nSongs
-    [tracks{i}, fs{i}] = audioread(songList(i).name);
+fprintf("Loading library..")
+for i = 1:n_songs
+    [track, this_fs] = audioread(songList(i).name);
+    fs{i} = this_fs;
+    matchOptions{i} = track(:,1);
     %fprintf('Size: %d, Fs: %d\n', size(tracks{i},1), fs{i})
 end
 fprintf("Done.\n")
 
-%transform every song in a one channel track
-for j = 1: nSongs
-    matchOptions{j} = tracks{j}(:,1);
-end
 
+%select mic
 info = audiodevinfo;
 info = info.input;
 fprintf("\nSelect Microphone:")
@@ -29,29 +28,29 @@ for n = 1: length(info)
 end
 mic = input("\n\nWhat microphone would you like to use? >");
 
-% eseguo la cross correlazione
-fprintf('\nListening...');
 
+fprintf('\nListening...');
 %get ready for recording
 recorder = audiorecorder(48000,16,1,mic);
-%record 12 seconds
-recordblocking(recorder,12);
+%record 
+sec_to_record=10;
+recordblocking(recorder,sec_to_record);
 fprintf('Done.\n');
 %while we're computing audio, play what we recorded
 play(recorder);
 
 fprintf("Computing..")
 %go back to the directory where we have the functions files.
-cd("..");
+cd("C:\Users\giaco\Documents\UNIVR\III ANNO\II sem\elaboratoESI\");
 %start timer
 tic;
 %shazam
-[songID,indx] = shazy(matchOptions, nSongs, recorder);
+[songID,indx,maxValues] = shazy(matchOptions, n_songs, recorder);
 t=toc;
 fprintf("Done.\n")
 
 %play the result (oh yes oh yes)
-result=audioplayer(matchOptions{songID}(indx:end), fs{songID});
+result=audioplayer(matchOptions{songID}(indx:indx+20*fs{songID}), fs{songID});
 play(result);
 
 %here we are, print the results
@@ -60,6 +59,15 @@ if songID >= 1
 else 
   fprintf("\nNo matches\n");
 end
-
 fprintf("Time: %d sec\n\n", int8(t));
+
+%plotting
+figure;
+subplot(2,1,1);
+plot(getaudiodata(recorder, 'int16'));
+subplot(2,1,2);
+plot(matchOptions{songID});
+figure;
+plot([1:n_songs], maxValues);
+
 

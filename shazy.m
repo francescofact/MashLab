@@ -1,38 +1,45 @@
-function [songID,indx] = shazy(matchOptions,nSongs,test1)
-%UNTITLED3 Summary of this function goes here
+function [choice,indx, maxValues] = shazy(matchOptions,nSongs,audio)
+%shazy exec cross correlation and get the index of the matched song
 %   Detailed explanation goes here
+maxValues=[];
 
 %threshold for the cross-corr result
 threshold = 125;
 
 %get audio data from the recording (audio 16 bit depth)
-out1 = getaudiodata(test1, 'int16');
+out1 = getaudiodata(audio, 'int16');
 
-for h = 1: nSongs
+for k = 1: nSongs
     %cross correlation between library and the recorded audio
-    [xc{h}, lagc{h}] = xcorr(matchOptions{h}, out1, 'none'); 
+    [xc{k}, lagc{k}] = xcorr(matchOptions{k}, out1, 'none'); 
     
-    %search for the max cross correlation value
-    if h == 1
-        [maxC, indx] = max(xc{h});
-        songNo = 1;
-        
-    elseif h ~= 1
-        if max(xc{h}) > maxC
-            [maxC, indx] = max(xc{h});
-            songNo = h;
+    [maxValue, maxValueIndex] = max(xc{k});
+    maxValues(k) = maxValue;
+    
+    if k == 1
+        topValue=maxValue;
+        choice = k;
+        indx = maxValueIndex;
+    else
+        if maxValue > topValue
+            topValue = maxValue;
+            choice = k;
+            indx = maxValueIndex;
         end
     end
+    
 end
 
-%get the index of max value
-indx = lagc{songNo}(indx);
+%search for the max cross correlation value
+
+%idx refers to the index of the xc array..
+%but i need the index in lagc for time estimation
+%get the index of max value 
+indx = lagc{choice}(indx);
 
 %filter with a threshold
-if maxC >= threshold
-  songID=songNo;
-elseif maxC < threshold
-  songID=0;
+if maxValue < threshold
+  choice=0;
 end
 
 
