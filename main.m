@@ -21,7 +21,7 @@ info = audiodevinfo;
 info = info.input;
 for n = 1: length(info)
     height = 218 - (22*n);
-    radio = uiradiobutton(micrgroup,'Position',[11 height 504 22]);
+    radio = uiradiobutton(micrgroup,'Position',[11 height 504 22], 'Tag', int2str(n-1));
     radio.Text = info(n).Name;
 end
 
@@ -30,7 +30,7 @@ startpanel = uipanel(window, 'Visible', 0);
 startpanel.BorderType = 'none';
 startpanel.Position = [1 1 640 202];
 image1 = uiimage(startpanel, 'Position', [226 16 190 187], 'ImageClickedFcn', @shazamPushed);
-image1.ImageSource = "shazam.jpg";
+image1.ImageSource = "images/shazam.jpg";
 
 % pannello album
 albumpanel = uipanel(window, 'Visible', 0);
@@ -54,11 +54,11 @@ function shazamPushed(hObject, eventdata)
     global isListening
     
     if isListening == 0
-        hObject.ImageSource = "shazam.gif";
+        hObject.ImageSource = "images/shazam.gif";
         isListening = 1;
         doWork();
     else
-        hObject.ImageSource = "shazam.jpg";
+        hObject.ImageSource = "images/shazam.jpg";
         isListening = 0;
         
     end
@@ -116,9 +116,10 @@ end
 
 % ascolta e calcola il match
 function doWork()
-    global matchOptions fs n_songs songList songs_dir image1 player slider
+    global matchOptions fs n_songs songList songs_dir image1 player slider micrgroup
     %get ready for recording
-    recorder = audiorecorder(48000,16,1,2); %TODO: prendere dalla gui il mic
+    mic = str2double(micrgroup.SelectedObject.Tag);
+    recorder = audiorecorder(48000,16,1,mic);
     %record 
     sec_to_record=10;
     recordblocking(recorder,sec_to_record);
@@ -126,7 +127,7 @@ function doWork()
     %while we're computing audio, play what we recorded
     play(recorder);
 
-    image1.ImageSource = "computing.gif";
+    image1.ImageSource = "images/computing.gif";
     pause(1)%to update image
     
     %go back to the directory where we have the functions files.
