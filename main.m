@@ -3,7 +3,7 @@ close all
 %global needing
 global isListening loadingLabel micrgroup startpanel songs_dir albumpanel titleLabel matchLabel image1 image2 mediaButton slider
 isListening = 0;
-songs_dir = './lib_mezzi';
+songs_dir = './lib_mezzi/';
 threshold = 125;
 
 % ------------------------------ GUI Setup --------------------------------
@@ -41,7 +41,7 @@ uilabel(albumpanel, 'Text', 'Match a:', 'Position', [230 130 51 22]);
 titleLabel = uilabel(albumpanel, 'Text', 'Sconosciuto', 'Position', [282 151 316 22]);
 matchLabel = uilabel(albumpanel, 'Text', 'Sconosciuto', 'Position', [282 130 316 22]);
 image2 = uiimage(albumpanel, 'Position', [19 14 178 177], 'ImageClickedFcn', @shazamPushed);
-mediaButton = uibutton(albumpanel, 'push', 'Text', '►', 'Position', [226 69 28 26], 'ButtonPushedFcn', @mediaPlayerButton);
+mediaButton = uibutton(albumpanel, 'push', 'Text', '?', 'Position', [226 69 28 26], 'ButtonPushedFcn', @mediaPlayerButton);
 slider = uislider(albumpanel, 'Enable', 'off', 'FontColor', [0.9412 0.9412 0.9412], 'Position', [270 82 316 3]);
 
 % -------------------------  carico libreria  ----------------------------
@@ -68,13 +68,13 @@ end
 function mediaPlayerButton(hObject, eventdata)
     global player slider
     
-    if hObject.Text == "■"
+    if hObject.Text == "II"
         pause(player);
         slider.Value = 0;
-        hObject.Text = "►";
+        hObject.Text = "?";
     else 
         play(player);
-        hObject.Text = "■";
+        hObject.Text = "II";
     end
 end
 
@@ -98,12 +98,11 @@ end
 function loadLibrary()
     global loadingLabel micrgroup startpanel songs_dir matchOptions fs n_songs songList
     
-    cd(songs_dir);
-    songList = dir('*.mp3');
+    songList = dir(strcat(songs_dir,'*.mp3'));
     n_songs = size(songList, 1);
     %load songs
     for i = 1:n_songs
-        [track, this_fs] = audioread(songList(i).name);
+        [track, this_fs] = audioread(strcat(songs_dir, songList(i).name));
         fs{i} = this_fs;
         matchOptions{i} = track(:,1);
         %fprintf('Size: %d, Fs: %d\n', size(tracks{i},1), fs{i})
@@ -130,8 +129,7 @@ function doWork()
     image1.ImageSource = "images/computing.gif";
     pause(1)%to update image
     
-    %go back to the directory where we have the functions files.
-    cd("..");
+    
     %start timer
     tic;
     %shazam
