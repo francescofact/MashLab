@@ -11,8 +11,8 @@ out1 = getaudiodata(audio, 'int16');
 
 for k = 1: nSongs
     %cross correlation between library and the recorded audio
-    [xc{k}, lagc{k}] = xcorr(matchOptions{k}, out1, 'none'); 
-    
+    [xc{k}, lagc{k}] = xcorr(gpuArray(matchOptions{k}), gpuArray(out1), 'none'); 
+    xc{k} = gather(xc{k}); %from gpuArray to double array
     [maxValue, maxValueIndex] = max(xc{k});
     maxValues(k) = maxValue;
     
