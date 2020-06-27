@@ -98,15 +98,21 @@ end
 function loadLibrary()
     global loadingLabel micrgroup startpanel songs_dir matchOptions fs n_songs songList
     
-    songList = dir(strcat(songs_dir,'*.mp3'));
-    n_songs = size(songList, 1);
+    %songList = dir(strcat(songs_dir,'*.mp3'));
+    %n_songs = size(songList, 1);
     %load songs
-    for i = 1:n_songs
-        [track, this_fs] = audioread(strcat(songs_dir, songList(i).name));
-        fs{i} = this_fs;
-        matchOptions{i} = track(:,1);
-        %fprintf('Size: %d, Fs: %d\n', size(tracks{i},1), fs{i})
-    end
+    
+    %for i = 1:n_songs
+    %    [track, this_fs] = audioread(strcat(songs_dir, songList(i).name));
+    %    fs{i} = this_fs;
+    %    matchOptions{i} = track(:,1);
+    %    %fprintf('Size: %d, Fs: %d\n', size(tracks{i},1), fs{i})
+    %end
+   
+    %save("database.mat", 'fs', 'matchOptions', 'n_songs', 'songList');
+    
+    pause(0.1); %to show gui before loading
+    load("database.mat");
     
     loadingLabel.Visible = 0;
     micrgroup.Visible = 1;
@@ -127,7 +133,7 @@ function doWork()
     play(recorder);
 
     image1.ImageSource = "images/computing.gif";
-    pause(1)%to update image
+    pause(0.1)%to update image
     
     
     %start timer
