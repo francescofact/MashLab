@@ -1,4 +1,4 @@
-function [choice,indx, maxValues] = shazy(matchOptions,nSongs,audio)
+function [choice,indx, maxValues] = shazy(matchOptions,nSongs,audio,useGPU)
 %shazy exec cross correlation and get the index of the matched song
 %   Detailed explanation goes here
 maxValues=[];
@@ -11,8 +11,12 @@ out1 = getaudiodata(audio, 'int16');
 
 for k = 1: nSongs
     %cross correlation between library and the recorded audio
-    [xc{k}, lagc{k}] = xcorr(gpuArray(matchOptions{k}), gpuArray(out1), 'none'); 
-    xc{k} = gather(xc{k}); %from gpuArray to double array
+    if (useGPU == 1 && gpuDeviceCount>0)
+        [xc{k}, lagc{k}] = xcorr(gpuArray(matchOptions{k}), gpuArray(out1), 'none'); 
+        xc{k} = gather(xc{k}); %from gpuArray to double array
+    else
+        [xc{k}, lagc{k}] = xcorr(matchOptions{k}, out1, 'none'); 
+    end
     [maxValue, maxValueIndex] = max(xc{k});
     maxValues(k) = maxValue;
     

@@ -1,7 +1,7 @@
 clear all
 close all
 %global needing
-global isListening loadingLabel micrgroup startpanel songs_dir albumpanel titleLabel matchLabel image1 image2 mediaButton slider
+global isListening loadingLabel micrgroup startpanel songs_dir albumpanel titleLabel matchLabel image1 image2 mediaButton slider useGPU
 isListening = 0;
 songs_dir = './lib_mezzi/';
 threshold = 125;
@@ -31,6 +31,7 @@ startpanel.BorderType = 'none';
 startpanel.Position = [1 1 640 202];
 image1 = uiimage(startpanel, 'Position', [226 16 190 187], 'ImageClickedFcn', @shazamPushed);
 image1.ImageSource = "images/shazam.jpg";
+useGPU = uicheckbox(startpanel, 'Text', 'Usa GPU', 'Position', [17 172 80 22]);
 
 % pannello album
 albumpanel = uipanel(window, 'Visible', 0);
@@ -130,7 +131,7 @@ end
 
 % ascolta e calcola il match
 function doWork()
-    global matchOptions fs n_songs songList songs_dir image1 player slider micrgroup
+    global matchOptions fs n_songs songList songs_dir image1 player slider micrgroup useGPU
     %get ready for recording
     mic = str2double(micrgroup.SelectedObject.Tag);
     recorder = audiorecorder(48000,16,1,mic);
@@ -147,7 +148,7 @@ function doWork()
     %start timer
     tic;
     %shazam
-    [songID,indx,maxValues] = shazy(matchOptions, n_songs, recorder);
+    [songID,indx,maxValues] = shazy(matchOptions, n_songs, recorder, useGPU.Value);
     t=toc;
     fprintf("Done.\n")
     correctsong = songList(songID).name;
