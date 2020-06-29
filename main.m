@@ -4,7 +4,6 @@ close all
 global isListening loadingLabel micrgroup startpanel songs_dir albumpanel titleLabel matchLabel image1 image2 mediaButton slider useGPU
 isListening = 0;
 songs_dir = './lib_mezzi/';
-threshold = 125;
 
 % ------------------------------ GUI Setup --------------------------------
 window = uifigure('Name', 'Mashlab', 'Position',[100 100 640 480]);
@@ -108,21 +107,21 @@ end
 function loadLibrary()
     global loadingLabel micrgroup startpanel songs_dir matchOptions fs n_songs songList
     
-    %songList = dir(strcat(songs_dir,'*.mp3'));
-    %n_songs = size(songList, 1);
+    songList = dir(strcat(songs_dir,'*.mp3'));
+    n_songs = size(songList, 1);
     %load songs
     
-    %for i = 1:n_songs
-    %    [track, this_fs] = audioread(strcat(songs_dir, songList(i).name));
-    %    fs{i} = this_fs;
-    %    matchOptions{i} = track(:,1);
-    %    %fprintf('Size: %d, Fs: %d\n', size(tracks{i},1), fs{i})
-    %end
+    for i = 1:n_songs
+        [track, this_fs] = audioread(strcat(songs_dir, songList(i).name));
+        fs{i} = this_fs;
+        matchOptions{i} = track(:,1);
+        %fprintf('Size: %d, Fs: %d\n', size(tracks{i},1), fs{i})
+    end
    
-    %save("database.mat", 'fs', 'matchOptions', 'n_songs', 'songList');
+    save("database.mat", 'fs', 'matchOptions', 'n_songs', 'songList');
     
     pause(0.1); %to show gui before loading
-    load("database.mat");
+    %load("database.mat");
     
     loadingLabel.Visible = 0;
     micrgroup.Visible = 1;
@@ -131,7 +130,7 @@ end
 
 % ascolta e calcola il match
 function doWork()
-    global matchOptions fs n_songs songList songs_dir image1 player slider micrgroup useGPU
+    global matchOptions fs n_songs songList songs_dir image1 player slider micrgroup useGPU mediaButton audiostored
     %get ready for recording
     mic = str2double(micrgroup.SelectedObject.Tag);
     recorder = audiorecorder(48000,16,1,mic);
@@ -151,31 +150,37 @@ function doWork()
     [songID,indx,maxValues] = shazy(matchOptions, n_songs, recorder, useGPU.Value);
     t=toc;
     fprintf("Done.\n")
-    correctsong = songList(songID).name;
     
-    %initialize mediaplayer
-    player=audioplayer(matchOptions{songID}, fs{songID});
-    set(player,'TimerFcn',@mediaPlayerTick, 'TimerPeriod', 0.5);
-    sLenght = audioinfo(songs_dir + "/" +correctsong).Duration;
-    slider.Limits = [0,ceil(sLenght)];
     
     %here we are, print the results
     if songID >= 1
-      fprintf("\nI think this is: %s a %d secondi.\n", extractBefore(correctsong, ".mp3"), int16(indx/fs{songID}));
-      setSong(extractBefore(songList(songID).name, '.mp3'), int16(indx/fs{songID}));
+        correctsong = songList(songID).name;
+
+        %initialize mediaplayer
+        player=audioplayer(matchOptions{songID}, fs{songID});
+        set(player,'TimerFcn',@mediaPlayerTick, 'TimerPeriod', 0.5);
+        sLenght = audioinfo(songs_dir + "/" +correctsong).Duration;
+        slider.Limits = [0,ceil(sLenght)];
+        fprintf("\nI think this is: %s a %d secondi.\n", extractBefore(correctsong, ".mp3"), int16(indx/fs{songID}));
+        setSong(extractBefore(songList(songID).name, '.mp3'), int16(indx/fs{songID}));
+        mediaButton.Visible = 1;
+        %plotting
+        figure;
+        subplot(2,1,1);
+        plot(getaudiodata(recorder, 'int16'));
+        subplot(2,1,2);
+        plot(matchOptions{songID});
+        figure;
+        plot([1:n_songs], maxValues);
     else 
-      fprintf("\nNo matches\n");
-      setSong("Nessun match", -1);
+        fprintf("\nNo matches\n");
+        setSong("Musica non rilevata", -1);
+        mediaButton.Visible = 0;
+        figure;
+        plot(getaudiodata(recorder, 'int16'));
     end
     fprintf("Time: %d sec\n\n", int8(t));
 
-    %plotting
-    figure;
-    subplot(2,1,1);
-    plot(getaudiodata(recorder, 'int16'));
-    subplot(2,1,2);
-    plot(matchOptions{songID});
-    figure;
-    plot([1:n_songs], maxValues);
+    
 end
 
