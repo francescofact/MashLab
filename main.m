@@ -7,7 +7,7 @@ songs_dir = './lib_mezzi/';
 threshold = 125;
 
 % ------------------------------ GUI Setup --------------------------------
-window = uifigure('Name', 'ourShazam', 'Position',[100 100 640 480]);
+window = uifigure('Name', 'Mashlab', 'Position',[100 100 640 480]);
 
 loadingLabel = uilabel(window);
 loadingLabel.Position = [262 230 117 22];
@@ -43,6 +43,7 @@ matchLabel = uilabel(albumpanel, 'Text', 'Sconosciuto', 'Position', [282 130 316
 image2 = uiimage(albumpanel, 'Position', [19 14 178 177], 'ImageClickedFcn', @shazamPushed);
 mediaButton = uibutton(albumpanel, 'push', 'Text', '?', 'Position', [226 69 28 26], 'ButtonPushedFcn', @mediaPlayerButton);
 slider = uislider(albumpanel, 'Enable', 'off', 'FontColor', [0.9412 0.9412 0.9412], 'Position', [270 82 316 3]);
+again = uibutton(albumpanel, 'push', 'Text', 'Riconosci Ancora', 'Position', [490 17 109 22], 'ButtonPushedFcn', @mediaPlayerAgain);
 
 % -------------------------  carico libreria  ----------------------------
 loadLibrary();
@@ -82,6 +83,14 @@ end
 function mediaPlayerTick(hObject, eventdata)
     global slider
     slider.Value = slider.Value+0.5;
+end
+
+%reset gui per riconoscimento
+function mediaPlayerAgain(hObject, eventdata)
+    global albumpanel isListening image1
+    image1.ImageSource = "images/shazam.jpg";
+    isListening = 0;
+    albumpanel.Visible = 0;
 end
 
 % mostro nella gui il match
@@ -134,7 +143,6 @@ function doWork()
 
     image1.ImageSource = "images/computing.gif";
     pause(0.1)%to update image
-    
     
     %start timer
     tic;
