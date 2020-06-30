@@ -1,12 +1,13 @@
 function [choice,indx, maxValues] = shazy(matchOptions,nSongs,audio,useGPU)
-%shazy exec cross correlation and get the index of the matched song
-%   Detailed explanation goes here
+%shazy esegue la cross correlazione e ottiene l'indice della canzone
+%corrispondente
+
 maxValues=[];
 
-%threshold for detecting music
+%threshold per rilevare musica
 threshold = 300;
 
-%get audio data from the recording (audio 16 bit depth)
+%ottengo audio dalla registrazione (a 16 bit di profondità)
 out1 = getaudiodata(audio, 'int16');
 
 if (mean(abs(out1))< threshold)
@@ -16,11 +17,11 @@ if (mean(abs(out1))< threshold)
 end
 
 for k = 1: nSongs
-    %cross correlation between library and the recorded audio
+    %cross correlazione tra libreria e audio registrato
     if (useGPU == 1 && gpuDeviceCount>0)
         try
             [xc{k}, lagc{k}] = xcorr(gpuArray(matchOptions{k}), gpuArray(out1) , 'none'); 
-            xc{k} = gather(xc{k}); %from gpuArray to double array
+            xc{k} = gather(xc{k}); %da gpuArray a double array
         catch
             [xc{k}, lagc{k}] = xcorr(matchOptions{k}, out1); 
         end
@@ -44,18 +45,10 @@ for k = 1: nSongs
     
 end
 
-%search for the max cross correlation value
-
-%idx refers to the index of the xc array..
-%but i need the index in lagc for time estimation
-%get the index of max value 
+%cerco il valore massimo di cross correlazione
+%idx è l'indice dell'array xc
+%ma ho bisogno dell'indice in lagc per stimare il tempo del match
 indx = lagc{choice}(indx);
-
-%filter with a threshold
-if maxValue < threshold
-  choice=0;
-end
-
 
 end
 
